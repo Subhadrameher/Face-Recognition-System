@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% block sub %}Upload a JPG or PNG. Every detected face is matched independently.{% endblock %}
+{% block body %}<div class="glass"><input type="file" id="f" class="form-control mb-3" accept=".jpg,.jpeg,.png,image/jpeg,image/png" style="max-width:420px">
+<button class="btn btn-glow mb-3" id="go"><i class="bi bi-search"></i> Recognize</button>
+<div><div class="stage"><img id="pv" class="d-none"><canvas class="ov" id="ov"></canvas></div></div><div id="res" class="mt-3"></div></div>{% endblock %}
+{% block js %}<script>
+f.onchange=()=>{if(f.files[0]){pv.src=URL.createObjectURL(f.files[0]);pv.classList.remove('d-none');ov.getContext('2d').clearRect(0,0,ov.width,ov.height);res.innerHTML='';}};
+go.onclick=async()=>{if(!f.files[0])return toast('Choose an image first.',false);const fd=new FormData();fd.append('image',f.files[0]);
+ go.disabled=true;try{const d=await api('/api/recognize-image',{method:'POST',body:fd});msg.classList.add('d-none');drawBoxes(ov,d);
+ res.innerHTML=d.faces.length?'<table class="table"><thead><tr><th>#</th><th>Result</th><th>Similarity</th></tr></thead><tbody>'+d.faces.map((x,i)=>`<tr><td>${i+1}</td><td><span class="badge ${x.known?'badge-ok':'badge-bad'}">${esc(x.name)}</span></td><td>${(x.similarity*100).toFixed(1)}%</td></tr>`).join('')+'</tbody></table>':'<p class="text-secondary">No face detected in this image.</p>';}
+ catch(e){toast(e.message,false);}go.disabled=false;};
+</script>{% endblock %}

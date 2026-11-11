@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block sub %}AI-Based Real-Time Face Recognition System Using Deep Learning and Computer Vision{% endblock %}
+{% block body %}<div class="row g-3"><div class="col-lg-7"><div class="glass"><h5>How it works</h5>
+<p>1. OpenCV detects each face. 2. A pretrained {{ model }} network (via DeepFace) turns the face into a 512-number embedding. 3. The embedding is compared with stored embeddings using cosine similarity. 4. If the best score is at least {{ threshold }}, the person is named; otherwise the result is Unknown.</p>
+<p class="mb-0">Stack: Python, Flask, OpenCV, DeepFace, NumPy, scikit-learn, SQLite, Bootstrap 5, Chart.js.</p></div></div>
+<div class="col-lg-5"><div class="glass"><h5>Privacy notice</h5><ul class="mb-0"><li>Faces are registered only with the person's consent.</li><li>Photos are not saved; only embeddings are stored locally in SQLite.</li><li>Embeddings are never returned by any API.</li><li>Deleting a person permanently removes their data.</li><li>Not for covert identification or surveillance.</li></ul></div></div></div>{% endblock %}

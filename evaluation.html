@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block sub %}Measured on labelled test images in storage/eval/&lt;person_id&gt;/ and storage/eval/unknown/. Nothing is pre-filled.{% endblock %}
+{% block body %}<button class="btn btn-glow mb-3" id="run"><i class="bi bi-play-fill"></i> Run evaluation</button><div id="out"></div>{% endblock %}
+{% block js %}<script>
+run.onclick=async()=>{run.disabled=true;out.innerHTML='<p class="text-secondary">Evaluating...</p>';
+try{const m=await api('/api/evaluate',{method:'POST'});
+if(!m.available){out.innerHTML=`<div class="glass">Evaluation data unavailable: ${esc(m.reason)}</div>`;}
+else{const pc=x=>x==null?'n/a (no samples)':(x*100).toFixed(2)+'%';
+const k=[['Accuracy',pc(m.accuracy)],['Precision (macro)',pc(m.precision)],['Recall (macro)',pc(m.recall)],['F1 (macro)',pc(m.f1)],['FAR',pc(m.far)],['FRR',pc(m.frr)]];
+out.innerHTML='<div class="row g-3 mb-3">'+k.map(([l,v])=>`<div class="col-6 col-lg-2"><div class="glass kpi"><b style="font-size:1.3rem">${v}</b><span>${l}</span></div></div>`).join('')+`</div><div class="glass table-responsive"><h6>Confusion matrix (rows = true, columns = predicted) · ${m.samples} images, ${m.skipped} skipped (no face)</h6><table class="table table-sm"><thead><tr><th></th>${m.labels.map(l=>`<th>${esc(l)}</th>`).join('')}</tr></thead><tbody>${m.confusion.map((r,i)=>`<tr><th>${esc(m.labels[i])}</th>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;}
+}catch(e){out.innerHTML='';toast(e.message,false);}run.disabled=false;};</script>{% endblock %}

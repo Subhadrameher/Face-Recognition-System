@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block sub %}Live numbers from the SQLite database.{% endblock %}
+{% block body %}
+<div class="row g-3 mb-3" id="kpis"></div>
+<div class="row g-3"><div class="col-lg-8"><div class="glass"><h6>Recognitions per day</h6><canvas id="c1" height="120"></canvas></div></div>
+<div class="col-lg-4"><div class="glass"><h6>Known vs Unknown</h6><canvas id="c2"></canvas></div></div>
+<div class="col-lg-8"><div class="glass"><h6>Recent activity</h6><div id="recent" class="table-responsive"></div></div></div>
+<div class="col-lg-4"><div class="glass"><h6>Model</h6><p class="mb-1">{{ model }} (pretrained, DeepFace)</p><p class="mb-1">Detector: OpenCV</p><p class="mb-1">Match: cosine similarity ≥ {{ threshold }}</p><p class="mb-0" id="mstate"></p></div></div></div>
+{% endblock %}
+{% block js %}<script>
+(async()=>{const s=await api('/api/stats');
+const k=[['Registered people',s.people],['Recognition attempts',s.attempts],['Successful',s.known],['Unknown',s.unknown]];
+kpis.innerHTML=k.map(([l,v])=>`<div class="col-6 col-lg-3"><div class="glass kpi"><b>${v}</b><span>${l}</span></div></div>`).join('');
+mstate.textContent=s.model_loaded?'Model status: loaded':'Model status: loads on first recognition';
+new Chart(c1,{type:'line',data:{labels:s.daily.map(d=>d.day),datasets:[{label:'All',data:s.daily.map(d=>d.total),borderColor:'#22d3ee',tension:.3},{label:'Known',data:s.daily.map(d=>d.known),borderColor:'#2f6bff',tension:.3}]},options:{plugins:{legend:{labels:{color:'#8d9bc4'}}},scales:{x:{ticks:{color:'#8d9bc4'}},y:{beginAtZero:true,ticks:{color:'#8d9bc4',precision:0}}}}});
+new Chart(c2,{type:'doughnut',data:{labels:['Known','Unknown'],datasets:[{data:[s.known,s.unknown],backgroundColor:['#34d399','#f87171'],borderWidth:0}]},options:{plugins:{legend:{labels:{color:'#8d9bc4'}}}}});
+recent.innerHTML=s.recent.length?'<table class="table"><tbody>'+s.recent.map(r=>`<tr><td>${esc(r.name)}</td><td>${(r.similarity*100).toFixed(1)}%</td><td>${r.source}</td><td>${r.created_at}</td></tr>`).join('')+'</tbody></table>':'<p class="text-secondary">No recognitions yet. Try Live Recognition or Image Recognition.</p>';
+})();</script>{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block sub %}Add at least {{ min_images }} clear photos with exactly one face each. Only mathematical embeddings are stored, not the photos.{% endblock %}
+{% block body %}<div class="row g-3"><div class="col-lg-5"><div class="glass">
+<label class="form-label">Full name</label><input id="name" class="form-control mb-3" maxlength="80">
+<label class="form-label">Unique person ID</label><input id="pid" class="form-control mb-3" maxlength="40">
+<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="consent"><label class="form-check-label" for="consent">The person shown has given consent for their face data to be stored for recognition. I understand it can be deleted at any time.</label></div>
+<input type="file" id="files" class="form-control mb-3" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple>
+<button class="btn btn-glow w-100" id="reg"><i class="bi bi-person-check"></i> Register person</button></div></div>
+<div class="col-lg-7"><div class="glass"><div class="mb-2"><button class="btn btn-outline-light btn-sm me-2" id="cam">Start Camera</button><button class="btn btn-glow btn-sm" id="snap" disabled><i class="bi bi-camera"></i> Capture</button></div>
+<video id="v" class="rounded mb-3 w-100" style="max-width:420px" autoplay playsinline muted></video>
+<h6>Selected images (<span id="n">0</span>)</h6><div id="th" class="d-flex flex-wrap gap-2"></div></div></div></div>{% endblock %}
+{% block js %}<script>
+const imgs=[];let stream;
+function render(){n.textContent=imgs.length;th.innerHTML='';imgs.forEach((o,i)=>{const d=document.createElement('div');d.className='thumb';d.innerHTML=`<img src="${o.url}"><button aria-label="Remove">×</button>`;d.querySelector('button').onclick=()=>{imgs.splice(i,1);render();};th.appendChild(d);});}
+files.onchange=()=>{[...files.files].forEach(f=>imgs.push({blob:f,name:f.name,url:URL.createObjectURL(f)}));files.value='';render();};
+cam.onclick=async()=>{try{stream=await navigator.mediaDevices.getUserMedia({video:true});v.srcObject=stream;snap.disabled=false;cam.disabled=true;}catch(e){toast(e.name==='NotAllowedError'?'Camera permission denied.':'Camera unavailable (needs HTTPS or localhost).',false);}};
+snap.onclick=()=>{const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);c.toBlob(b=>{imgs.push({blob:b,name:'capture.jpg',url:URL.createObjectURL(b)});render();},'image/jpeg',.92);};
+reg.onclick=async()=>{const fd=new FormData();fd.append('name',name.value);fd.append('person_id',pid.value);fd.append('consent',consent.checked);imgs.forEach(o=>fd.append('images',o.blob,o.name));
+ if(!consent.checked)return toast('Please confirm consent first.',false);
+ reg.disabled=true;reg.textContent='Processing (model may download on first use)...';
+ try{const d=await api('/api/register',{method:'POST',body:fd});toast(`Registered with ${d.stored} images.`);imgs.length=0;render();name.value=pid.value='';}
+ catch(e){toast(e.message+(e.details?' — '+e.details.join('; '):''),false);}
+ reg.disabled=false;reg.innerHTML='<i class="bi bi-person-check"></i> Register person';};
+</script>{% endblock %}

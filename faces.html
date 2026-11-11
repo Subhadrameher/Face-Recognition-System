@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% block sub %}Deleting a person permanently removes all of their stored face data.{% endblock %}
+{% block body %}<div class="row g-3" id="list"></div>{% endblock %}
+{% block js %}<script>
+async function load(){const p=await api('/api/persons');list.innerHTML=p.length?p.map(x=>`<div class="col-md-6 col-xl-4"><div class="glass d-flex align-items-center gap-3"><div class="ava">${esc(x.name[0]||'?').toUpperCase()}</div><div class="flex-grow-1"><b>${esc(x.name)}</b><div class="text-secondary small">ID ${esc(x.person_id)} · ${x.images} embeddings<br>${x.created_at}</div></div><button class="btn btn-outline-danger btn-sm" data-id="${esc(x.person_id)}"><i class="bi bi-trash"></i></button></div></div>`).join(''):'<p class="text-secondary">Nobody is registered yet. <a href="/register">Register a face</a>.</p>';
+ list.querySelectorAll('button').forEach(b=>b.onclick=async()=>{if(!confirm('Permanently delete this person and all face data?'))return;try{await api('/api/persons/'+encodeURIComponent(b.dataset.id),{method:'DELETE'});load();}catch(e){toast(e.message,false);}});}
+load();</script>{% endblock %}

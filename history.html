@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block sub %}The latest 200 recognition results.{% endblock %}
+{% block body %}<div class="glass table-responsive" id="t"></div>{% endblock %}
+{% block js %}<script>
+(async()=>{const h=await api('/api/history');t.innerHTML=h.length?'<table class="table"><thead><tr><th>Time (UTC)</th><th>Result</th><th>ID</th><th>Similarity</th><th>Source</th></tr></thead><tbody>'+h.map(r=>`<tr><td>${r.created_at}</td><td><span class="badge ${r.known?'badge-ok':'badge-bad'}">${esc(r.name)}</span></td><td>${esc(r.person_id||'-')}</td><td>${(r.similarity*100).toFixed(1)}%</td><td>${r.source}</td></tr>`).join('')+'</tbody></table>':'<p class="text-secondary mb-0">No history yet.</p>';})();</script>{% endblock %}
